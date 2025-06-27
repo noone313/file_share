@@ -57,45 +57,40 @@ export const getUserById = async (req,res)=>{
 
 
 
-export const createUser = async (req,res)=>{
+export const createUser = async (req, res) => {
+  try {
+    const { userName, email, password } = req.body;
 
-    try {
-
-        const { userName, email, password } = req.body;
-
-
-        if (!userName || !email || !password) {
-            return res.status(400).json({ message: "All fields are required" });
-        }
-
-        const existingUser = await User.findOne({ where: { email } });
-
-        if (existingUser) {
-            return res.status(400).json({ message: "Email already exists" });
-        }
-
-
-        const saltRounds = 10;
-
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-        
-
-
-
-        const user = await User.create({
-            userName,
-            email,
-            password: hashedPassword,
-            role:'user',
-        });
-
-        res.status(201).json(user);
-        
-    } catch (error) {
-        res.status(500).json({message : error});
+    if (!userName || !email || !password) {
+      return res.status(400).json({ message: "جميع الحقول مطلوبة" });
     }
-}
 
+    const existingUser = await User.findOne({ where: { email } });
+
+    if (existingUser) {
+      return res.status(400).json({ message: "البريد الإلكتروني مستخدم مسبقًا" });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const user = await User.create({
+      userName,
+      email,
+      password: hashedPassword,
+      role: 'user',
+    });
+
+    // إزالة كلمة المرور من الرد
+    const { password: _, ...userData } = user.toJSON();
+
+    res.status(201).json(userData);
+
+  } catch (error) {
+    console.error("❌ خطأ في إنشاء المستخدم:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء إنشاء المستخدم" });
+  }
+};
 
 export const updateUser = async (req,res)=> {
 
