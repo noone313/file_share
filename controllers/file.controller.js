@@ -158,7 +158,7 @@ export const downloadFile = async (req, res) => {
 
 export const lockFile = async (req, res) => {
     try {
-        const { accessToken,password } = req.params;
+        const { accessToken,password } = req.body;
         const file = await File.findOne({ where: { accessToken } });
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
