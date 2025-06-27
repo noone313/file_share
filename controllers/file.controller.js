@@ -1,6 +1,7 @@
 import { File, User } from '../models/models.js'; 
 import { Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 
 
@@ -66,7 +67,8 @@ export const createFile = async (req, res) => {
 
             const {title, message , expiresAt, password, recoverable} = req.body; // استخرج الحقول من الطلب
 
-            const accessToken = require('crypto').randomBytes(32).toString('hex');
+            const accessToken = crypto.randomBytes(32).toString('hex');
+
 
 
             // إنشاء سجل في قاعدة البيانات
