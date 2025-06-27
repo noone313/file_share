@@ -29,31 +29,40 @@ export const getAllFiles = async (req, res) => {
 }
 
 export const getFileByAccessToken = async (req, res) => {
-    try {
-        const { accessToken } = req.params;
-        const file = await File.findOne({
-            where: { accessToken },
-            include: {
-                model: User,
-                attributes: ['userName', 'email'],
-            },
-        });
-        if (!file || file.expiresAt < new Date() || (file.locked && !req.body.password)) {
-            return res.status(404).json({ message: 'File not found' });
-        }else if (file.locked) {
-            const { password } = req.body;
-            const isPasswordValid = await bcrypt.compare(password, file.password);
-            if (!isPasswordValid) {
-                return res.status(403).json({ message: 'Invalid password' });
-            }
-             // إذا كان الملف موجودًا ولم تنته صلاحيته، قم بإرجاع
-        res.status(200).json(file);
-        }
-       
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const { accessToken } = req.params;
+
+    const file = await File.findOne({
+      where: { accessToken },
+      include: {
+        model: User,
+        attributes: ['userName', 'email'],
+      },
+    });
+
+    // ❌ الملف غير موجود أو انتهت صلاحيته
+    if (!file || (file.expiresAt && file.expiresAt < new Date())) {
+      return res.status(404).json({ message: 'File not found or expired' });
     }
-}
+
+    // 🔒 الملف محمي بكلمة مرور
+    if (file.locked) {
+      const { password } = req.body;
+      const isPasswordValid = await bcrypt.compare(password || '', file.password);
+
+      if (!isPasswordValid) {
+        return res.status(403).json({ message: 'Invalid password' });
+      }
+    }
+
+    // ✅ الملف موجود وصالح وتم التحقق (أو غير محمي)
+    res.status(200).json(file);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 
 
